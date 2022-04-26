@@ -34,10 +34,21 @@ export class BitbucketServerRemote extends RemoteProvider {
 	}
 
 	protected override get baseUrl(): string {
-		const [project, repo] = this.path.startsWith('scm/')
-			? this.path.replace('scm/', '').split('/')
-			: this.splitPath();
-		return `${this.protocol}://${this.domain}/projects/${project}/repos/${repo}`;
+		// path: stash/scm/starsweb/sw-infra-configs
+		let virtualBase = '';
+		let pathToSplit = this.path;
+		let project = '';
+		let repo = '';
+		// if we have virtual base path before /scm
+		if (this.path.indexOf('/scm/') != -1) {
+			virtualBase = `/${this.path.split('/scm/')[0]}`; // would be /stash as above example
+			pathToSplit = this.path.split('/scm/')[1]; // would be starsweb/sw-infra-configs
+			[project, repo] = pathToSplit.split('/'); // project and repo
+			return `${this.protocol}://${this.domain}${virtualBase}/projects/${project}/repos/${repo}`;
+		} else {
+			[project, repo] = this.path.startsWith('scm/') ? this.path.replace('scm/', '').split('/') : this.splitPath();
+			return `${this.protocol}://${this.domain}/projects/${project}/repos/${repo}`;
+		}
 	}
 
 	override get icon() {
